@@ -171,7 +171,6 @@
             $.get(baseURL + "/data", function(response){
                 var json_obj = $.parseJSON(response);
                 var now = new Date();
-                var new_pokemon_list = {};
                 
                 for (var index in json_obj) {
                     var item = json_obj[index];
@@ -221,10 +220,11 @@
 
                     // Alert if new pokemon is not in current list but is in new list
                     if (item["type"] === "pokemon") {
-                        new_pokemon_list[item["key"]] = true;
                         if (!cur_pokemon_list[item["key"]] && alertRequested(item["name"])) {
                             alert(item["name"]);
+                            console.log(item["name"]);
                         }
+                        cur_pokemon_list[item["key"]] = true;
                     }
 
                     if (item["infobox"]) {
@@ -254,8 +254,6 @@
                     })(marker, disappearsAt);
                 }
                 // deleteMarkers(markers.Length - json_obj.length);
-
-                cur_pokemon_list = new_pokemon_list;
             })
         }
         window.setInterval(updateMap, {{ auto_refresh }});
