@@ -64,6 +64,8 @@ FLOAT_LONG = 0
 NEXT_LAT = 0
 NEXT_LONG = 0
 auto_refresh = 0
+alerts = []
+no_alerts = []
 default_step = 0.001
 api_endpoint = None
 pokemons = {}
@@ -449,6 +451,10 @@ def get_args():
     group.add_argument(
         '-o', '--only', help='Comma-separated list of Pokémon names or IDs to search')
     parser.add_argument(
+        '-al', '--alerts', help='Comma-separated list of Pokémon names or IDs to alert when they appear')
+    parser.add_argument(
+        '-nal', '--no_alerts', help='Comma-separated list of Pokémon names or IDs to not alert when they appear')
+    parser.add_argument(
         "-ar",
         "--auto_refresh",
         help="Enables an autorefresh that behaves the same as a page reload. " +
@@ -590,6 +596,12 @@ def main():
         ignore = [i.lower().strip() for i in args.ignore.split(',')]
     elif args.only:
         only = [i.lower().strip() for i in args.only.split(',')]
+    if args.alerts:
+        global alerts
+        alerts = [i.lower().strip() for i in args.alerts.split(',')]
+    elif args.no_alerts:
+        global no_alerts
+        no_alerts = [i.lower().strip() for i in args.no_alerts.split(',')]
 
     pos = 1
     x = 0
@@ -789,7 +801,7 @@ def fullmap():
     clear_stale_pokemons()
 
     return render_template(
-        'example_fullmap.html', key=GOOGLEMAPS_KEY, fullmap=get_map(), auto_refresh=auto_refresh)
+        'example_fullmap.html', key=GOOGLEMAPS_KEY, fullmap=get_map(), auto_refresh=auto_refresh, alerts=json.dumps(alerts), no_alerts=json.dumps(no_alerts))
 
 
 @app.route('/next_loc')
@@ -839,6 +851,7 @@ def get_pokemarkers():
         pokeMarkers.append({
             'type': 'pokemon',
             'key': pokemon_key,
+            'name': pokemon["name"].lower(),
             'disappear_time': pokemon['disappear_time'],
             'icon': 'static/icons/%d.png' % pokemon["id"],
             'lat': pokemon["lat"],

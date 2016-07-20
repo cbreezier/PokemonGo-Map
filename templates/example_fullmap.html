@@ -59,8 +59,32 @@
         var map = null;
         var markers = [];
         var markerCache = {};
+
+        var alerts = {{ alerts|safe }};
+        var no_alerts = {{ no_alerts|safe }};
+        var cur_pokemon_list = {};
+
+        function alertRequested(item) {
+            if (no_alerts.length == 0) {
+                for (var i = 0; i < alerts.length; i++) {
+                    if (alerts[i] === item) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                for (var i = 0; i < no_alerts.length; i++) {
+                    if (no_alerts[i] === item) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
         // Adds a marker to the map and push to the array.
-        function addMarker(options = {}) {
+        function addMarker(options) {
+            options = options || {};
             var default_options = {map: map}
             for(var prop in options){
                 if(options.hasOwnProperty(prop)){
@@ -73,7 +97,8 @@
         }
 
         // Sets the map on all markers in the array.
-        function setMapOnAll(map, length = null) {
+        function setMapOnAll(map, length) {
+            length = length || null;
             var lastIndex = markers.length -1;
             if(length != null){
                 lastIndex = length;
@@ -146,6 +171,7 @@
             $.get(baseURL + "/data", function(response){
                 var json_obj = $.parseJSON(response);
                 var now = new Date();
+                var new_pokemon_list = {};
                 
                 for (var index in json_obj) {
                     var item = json_obj[index];
@@ -193,6 +219,14 @@
                         });
                     markerCache[key] = {item: item, marker: marker};
 
+                    // Alert if new pokemon is not in current list but is in new list
+                    if (item["type"] === "pokemon") {
+                        new_pokemon_list[item["key"]] = true;
+                        if (!cur_pokemon_list[item["key"]] && alertRequested(item["name"])) {
+                            alert(item["name"]);
+                        }
+                    }
+
                     if (item["infobox"]) {
                         (function(_infobox, _map, _marker){
                             _marker.infoWindow = new google.maps.InfoWindow({
@@ -220,6 +254,8 @@
                     })(marker, disappearsAt);
                 }
                 // deleteMarkers(markers.Length - json_obj.length);
+
+                cur_pokemon_list = new_pokemon_list;
             })
         }
         window.setInterval(updateMap, {{ auto_refresh }});
